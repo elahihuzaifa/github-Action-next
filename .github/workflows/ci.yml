@@ -1,0 +1,50 @@
+# Workflow name
+name: Next.js CI Pipeline
+
+# on mean is trigger start
+on:
+  push:
+    branches: [main]
+
+# jobs and steps 2nd Stpes
+jobs:
+  build-and-test:
+    runs-on: unbuntu-latest
+    steps:
+      #  - kisi bhi ek element ka andar multiple line used karni hain -
+      # FIRST SETEP IS CHECKOUT REPO KO UTHA KAR UBUNTU LATEST MEACHINE MEIN DAL DO
+      - name: Checkout Repo
+        # Second Step checkout manual git action alerady add checkout@v4
+        uses: actions/checkout@v4
+      # third step ubuntu machine me node install karna hain
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+        # caching cache node modules and dependencies
+      - name: Cache Next.js Build and npm Dependencies
+        uses: actions/cache@v4
+        with:
+          # ya -nextjs kiya karta sare code ko hashing mein rakhta hain
+
+          path: |
+            ~/.npm
+            ${{ github.workspace }}/.next/cache
+            key: ${{ runner.os}}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/package.json') }}
+
+          # IN SAB CHEEZON KA KAHAN RESTORE KARNa hain
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+
+      # dependecis works
+      - name: Install Dependencies
+        run: npm ci
+
+        #  linter ek file hoti hain eslint ki javaScipt ki  aur typeScript ka best practice follow karna ka liya jo apko batata hain jese best practice used hota hain bad pratice used ho rahi hogai ya bata dega
+      - name: Run Linter
+        run: npm run lint
+
+      # ci last step build Production Build Banana
+      - name: Build Next.js App
+        run: npm run build
